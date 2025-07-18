@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>QR to PDF Generator</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
+    input[type="text"] { width: 100%; padding: 10px; margin: 10px 0; }
+    button { padding: 10px 20px; }
+    .message { padding: 10px; margin-top: 20px; border-radius: 5px; }
+    .success { background-color: #d4edda; color: #155724; }
+    .error { background-color: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h2>QR to PDF Generator</h2>
+
+  <label>QR Folder:</label>
+  <input type="text" id="qr_folder_path" readonly />
+  <button onclick="pickFolder('qr_folder_path')">Select QR Folder</button>
+
+  <label>Output Folder:</label>
+  <input type="text" id="output_folder_path" readonly />
+  <button onclick="pickFolder('output_folder_path')">Select Output Folder</button>
+
+  <label>Logo Image:</label>
+  <input type="text" id="logo_path" readonly />
+  <button onclick="pickFile('logo_path')">Select Logo</button>
+
+  <button id="generateBtn">Generate PDFs</button>
+
+  <div id="result" class="message" style="display: none;"></div>
+
+  <script>
+    async function pickFolder(inputId) {
+      const folder = await window.electron.selectFolder();
+      if (folder) document.getElementById(inputId).value = folder;
+    }
+
+    async function pickFile(inputId) {
+      const file = await window.electron.selectFile();
+      if (file) document.getElementById(inputId).value = file;
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const qrPath = document.getElementById('qr_folder_path').value;
+      const outputPath = document.getElementById('output_folder_path').value;
+      const logoPath = document.getElementById('logo_path').value;
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'none';
+
+      const data = {
+        qr_folder: qrPath,
+        output_folder: outputPath,
+        logo_path: logoPath
+      };
+
+      try {
+        const res = await fetch('http://localhost:5000/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const msg = await res.text();
+        resultDiv.style.display = 'block';
+        resultDiv.className = res.ok ? 'message success' : 'message error';
+        resultDiv.innerText = msg;
+      } catch (err) {
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'message error';
+        resultDiv.innerText = 'Failed to reach Flask server.';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "qr-to-pdf-app",
+  "main": "electron.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-packager . QRPDFApp --platform=darwin --arch=x64 --out=dist --overwrite --icon=icon.icns",
+    "build:win": "electron-packager . QRPDFApp --platform=win32 --arch=ia32 --out=dist --overwrite --icon=icon.ico"
+
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-packager": "^17.1.2"
+  }
+}
