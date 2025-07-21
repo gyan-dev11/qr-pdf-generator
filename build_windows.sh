@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+set -e  # Exit on any error
+set -x  # Enable debug mode to echo commands
 
 # Resolve paths
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -9,23 +10,33 @@ FRONTEND_DIR="$PROJECT_ROOT/frontend"
 DIST_DIR="$PROJECT_ROOT/dist"
 APP_NAME="QRPDFApp"
 
-echo "[1] Cleaning previous builds..."
+echo "[DEBUG] Project root: $PROJECT_ROOT"
+echo "[DEBUG] Backend dir: $BACKEND_DIR"
+echo "[DEBUG] Frontend dir: $FRONTEND_DIR"
+echo "[DEBUG] Dist dir: $DIST_DIR"
+echo "[DEBUG] App name: $APP_NAME"
+
+echo "[1] 🧹 Cleaning previous builds..."
 rm -rf "$BACKEND_DIR/dist"
 rm -rf "$PROJECT_ROOT/build"
 rm -rf "$DIST_DIR"
 rm -rf "$PROJECT_ROOT/${APP_NAME}-win32-x64"
+echo "[DEBUG] Cleaned previous build artifacts."
 
-echo "[2] Building Flask backend with PyInstaller..."
+echo "[2] 🛠 Building Flask backend with PyInstaller..."
 cd "$BACKEND_DIR"
+echo "[DEBUG] Running in directory: $(pwd)"
 pyinstaller --onefile app.py --name flask_server.exe
+echo "[DEBUG] Flask server binary created at $BACKEND_DIR/dist/flask_server.exe"
 
-echo "[3] Packaging Electron app for Windows..."
+echo "[3] 📦 Packaging Electron app for Windows..."
 cd "$PROJECT_ROOT"
+echo "[DEBUG] Running in directory: $(pwd)"
 
-npx electron-packager . $APP_NAME \
+npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
   --platform=win32 \
   --arch=x64 \
-  --out=dist \
+  --out="$DIST_DIR" \
   --overwrite \
   --prune=true \
   --ignore="build_mac_app.sh" \
@@ -36,5 +47,6 @@ npx electron-packager . $APP_NAME \
   --ignore="flask_server.spec" \
   --ignore="README.md" \
   --ignore="frontend"
+echo "[DEBUG] Electron app packaged at $DIST_DIR/${APP_NAME}-win32-x64"
 
-echo "[4] Done. App available at: dist/${APP_NAME}-win32-x64/${APP_NAME}.exe"
+echo "[4] ✅ Done. App available at: $DIST_DIR/${APP_NAME}-win32-x64/${APP_NAME}.exe"
