@@ -13,12 +13,15 @@ Install the following:
 
 ### 🍏 macOS Build
 
-```bash
+```
 cd qr-pdf-generator
+```
 
+```
 chmod +x build_mac.sh
 ./build_mac.sh
-````
+```
+
 
 If the `.app` is blocked on launch, run:
 
