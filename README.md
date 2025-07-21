@@ -3,10 +3,10 @@
 ## Build mac app
 
 ```
-cd build_app
+cd qr-pdf-generator
 ```
+
 ```
 chmod +x build_mac_app.sh
 ./build_mac_app.sh
-
 ```
