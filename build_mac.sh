@@ -34,17 +34,27 @@ pip install --upgrade pip
 pip install -r "$PROJECT_ROOT/requirements.txt"
 
 echo "[4] 🛠 Building Flask backend with PyInstaller..."
-echo "$BACKEND_DIR"
+echo "[DEBUG] Attempting to build in: $BACKEND_DIR"
+if [ ! -f "$BACKEND_DIR/app.py" ]; then
+  echo "[ERROR] app.py not found in $BACKEND_DIR"
+  exit 1
+fi
+
 cd "$BACKEND_DIR"
-echo "[DEBUG] Running in: $(pwd)"
+echo "[DEBUG] Changed directory to: $(pwd)"
+ls -l  # Show files to confirm app.py exists
 pyinstaller --onefile app.py --name flask_server
 echo "[DEBUG] Flask server binary created at $BACKEND_DIR/dist/flask_server"
 
 echo "[5] 🔐 Fixing Electron sandbox permissions..."
 cd "$PROJECT_ROOT"
-sudo chown root node_modules/electron/dist/chrome-sandbox
-sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
-echo "[DEBUG] Set SUID sandbox permissions."
+if [ -f "node_modules/electron/dist/chrome-sandbox" ]; then
+  sudo chown root node_modules/electron/dist/chrome-sandbox
+  sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+  echo "[DEBUG] Set SUID sandbox permissions."
+else
+  echo "[WARN] chrome-sandbox not found, skipping permission fix."
+fi
 
 echo "[6] 📦 Packaging Electron app for macOS..."
 npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
@@ -54,6 +64,8 @@ npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
   --overwrite \
   --prune=true \
   --ignore="build_mac.sh" \
+  --ignore="build_linux.sh" \
+  --ignore="build_windows.sh" \
   --ignore="requirements.txt" \
   --ignore="app.spec" \
   --ignore="flask_server.spec" \
