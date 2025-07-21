@@ -22,7 +22,7 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, 'frontend/index.html'))
         .then(() => {
             console.log('[Electron] Frontend loaded.');
-            mainWindow.webContents.openDevTools(); // Moved here
+            // mainWindow.webContents.openDevTools(); // Moved here
         })
         .catch(err => {
             console.error('[Electron] Failed to load frontend:', err);
