@@ -15,7 +15,7 @@ def log_request():
 
 @app.route('/')
 def index():
-    return "✅ Backend is Running"
+    return "Backend is Running"
 
 @app.route('/generate', methods=['POST'])
 def generate():

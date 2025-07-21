@@ -5,7 +5,6 @@ const { spawn } = require('child_process');
 let pyProc = null;
 let mainWindow = null;
 
-// Toggle this to switch between Python script and PyInstaller binary
 const USE_PYINSTALLER_BINARY = false;
 
 function createWindow() {
@@ -21,15 +20,18 @@ function createWindow() {
 
     mainWindow.loadFile(path.join(__dirname, 'frontend/index.html'))
         .then(() => {
-            console.log('[Electron] Frontend loaded.');
-            mainWindow.webContents.openDevTools(); // Moved here
+            console.log('[Electron] Frontend loaded successfully.');
+            mainWindow.webContents.openDevTools();
         })
         .catch(err => {
             console.error('[Electron] Failed to load frontend:', err);
         });
+
+    mainWindow.on('closed', () => {
+        console.log('[Electron] Main window closed.');
+    });
 }
 
-// Cross-platform Python path detection for virtual environment
 function getPythonPath() {
     const isWindows = process.platform === 'win32';
     const pythonPath = isWindows
@@ -40,19 +42,19 @@ function getPythonPath() {
 }
 
 function startFlask() {
-    if (USE_PYINSTALLER_BINARY) {
-        const pythonExecutable = path.join(__dirname, 'backend', 'flask_server');
-        console.log(`[Electron] Starting Flask backend from binary: ${pythonExecutable}`);
+    console.log('[Electron] Starting Flask backend...');
 
-        pyProc = spawn(pythonExecutable, {
+    if (USE_PYINSTALLER_BINARY) {
+        const flaskBinary = path.join(__dirname, 'backend', 'flask_server');
+        console.log(`[Electron] Using PyInstaller binary: ${flaskBinary}`);
+        pyProc = spawn(flaskBinary, {
             cwd: __dirname,
             shell: false,
         });
     } else {
         const script = path.join(__dirname, 'backend', 'app.py');
         const python = getPythonPath();
-        console.log(`[Electron] Starting Flask backend from script: ${python} ${script}`);
-
+        console.log(`[Electron] Using Python script: ${python} ${script}`);
         pyProc = spawn(python, [script], {
             cwd: __dirname,
             shell: false,
@@ -60,59 +62,78 @@ function startFlask() {
     }
 
     pyProc.stdout.on('data', (data) => {
-        console.log(`[Flask STDOUT]: ${data.toString()}`);
+        console.log(`[Flask STDOUT]: ${data.toString().trim()}`);
     });
 
     pyProc.stderr.on('data', (data) => {
-        console.error(`[Flask STDERR]: ${data.toString()}`);
+        console.error(`[Flask STDERR]: ${data.toString().trim()}`);
     });
 
     pyProc.on('error', (err) => {
-        console.error('[Electron] Failed to start Flask process:', err);
+        console.error('[Electron] ❌ Failed to start Flask process:', err);
+    });
+
+    pyProc.on('spawn', () => {
+        console.log('[Electron] ✅ Flask process spawned successfully.');
+    });
+
+    pyProc.on('exit', (code, signal) => {
+        console.log(`[Electron] Flask process exited with code ${code}, signal ${signal}`);
     });
 
     pyProc.on('close', (code) => {
-        console.log(`[Electron] Flask process exited with code ${code}`);
+        console.log(`[Electron] Flask process closed with code ${code}`);
     });
 }
 
-// IPC: Folder selection
 ipcMain.handle('dialog:selectFolder', async () => {
-    console.log('[IPC] Folder dialog triggered');
+    console.log('[IPC] 📂 Folder dialog triggered');
     const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
-    return result.canceled ? null : result.filePaths[0];
+    if (result.canceled) {
+        console.log('[IPC] Folder selection canceled.');
+        return null;
+    } else {
+        console.log(`[IPC] Folder selected: ${result.filePaths[0]}`);
+        return result.filePaths[0];
+    }
 });
 
-// IPC: File selection
 ipcMain.handle('dialog:selectFile', async () => {
-    console.log('[IPC] File dialog triggered');
+    console.log('[IPC] 📄 File dialog triggered');
     const result = await dialog.showOpenDialog({
         properties: ['openFile'],
         filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }],
     });
-    return result.canceled ? null : result.filePaths[0];
+    if (result.canceled) {
+        console.log('[IPC] File selection canceled.');
+        return null;
+    } else {
+        console.log(`[IPC] File selected: ${result.filePaths[0]}`);
+        return result.filePaths[0];
+    }
 });
 
-// App lifecycle
 app.whenReady().then(() => {
-    console.log('[Electron] App is ready');
+    console.log('[Electron] ✅ App is ready');
     startFlask();
     createWindow();
 });
 
 app.on('window-all-closed', () => {
+    console.log('[Electron] All windows closed.');
     if (pyProc) {
-        console.log('[Electron] Killing Flask process...');
+        console.log('[Electron] 🔻 Terminating Flask process...');
         pyProc.kill();
     }
     if (process.platform !== 'darwin') {
+        console.log('[Electron] Quitting app...');
         app.quit();
     }
 });
 
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-        console.log('[Electron] Re-creating window on activate');
+        console.log('[Electron] App re-activated. Re-creating main window...');
         createWindow();
     }
 });
