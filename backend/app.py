@@ -4,6 +4,10 @@ import os
 
 app = Flask(__name__)
 
+@app.before_request
+def log_request():
+    print(f"[Flask] ➡️ {request.method} {request.path}")
+
 @app.route('/')
 def index():
     return "Backend is Running"

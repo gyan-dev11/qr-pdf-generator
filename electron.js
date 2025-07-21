@@ -19,8 +19,14 @@ function createWindow() {
         },
     });
 
-    mainWindow.loadFile(path.join(__dirname, 'frontend/index.html'));
-    console.log('[Electron] Frontend loaded.');
+    mainWindow.loadFile(path.join(__dirname, 'frontend/index.html'))
+        .then(() => {
+            console.log('[Electron] Frontend loaded.');
+            mainWindow.webContents.openDevTools(); // Moved here
+        })
+        .catch(err => {
+            console.error('[Electron] Failed to load frontend:', err);
+        });
 }
 
 // Cross-platform Python path detection for virtual environment
@@ -53,7 +59,6 @@ function startFlask() {
         });
     }
 
-    // Monitor Flask output
     pyProc.stdout.on('data', (data) => {
         console.log(`[Flask STDOUT]: ${data.toString()}`);
     });
@@ -71,14 +76,14 @@ function startFlask() {
     });
 }
 
-// IPC handler: Select folder
+// IPC: Folder selection
 ipcMain.handle('dialog:selectFolder', async () => {
     console.log('[IPC] Folder dialog triggered');
     const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
     return result.canceled ? null : result.filePaths[0];
 });
 
-// IPC handler: Select file
+// IPC: File selection
 ipcMain.handle('dialog:selectFile', async () => {
     console.log('[IPC] File dialog triggered');
     const result = await dialog.showOpenDialog({
@@ -100,7 +105,9 @@ app.on('window-all-closed', () => {
         console.log('[Electron] Killing Flask process...');
         pyProc.kill();
     }
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
 app.on('activate', () => {
