@@ -342,7 +342,7 @@
  [],
  False,
  False,
- 1753081675,
+ 1753086839,
  [('run',
    '/home/gyan/projects/qr_pdf_app/venv/lib/python3.12/site-packages/PyInstaller/bootloader/Linux-64bit-intel/run',
    'EXECUTABLE')],
