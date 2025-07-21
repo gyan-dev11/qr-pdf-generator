@@ -1,14 +1,13 @@
 #!/bin/bash
 set -e
-
-# Enable debug mode
-set -x
+set -x  # Enable debug output
 
 # Resolve paths
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 DIST_DIR="$PROJECT_ROOT/dist"
+VENV_DIR="$PROJECT_ROOT/venv"
 APP_NAME="QRPDFApp"
 
 echo "[DEBUG] Project root: $PROJECT_ROOT"
@@ -22,22 +21,31 @@ rm -rf "$BACKEND_DIR/dist"
 rm -rf "$PROJECT_ROOT/build"
 rm -rf "$DIST_DIR"
 rm -rf "$PROJECT_ROOT/${APP_NAME}-darwin-universal"
+rm -rf "$VENV_DIR"
 echo "[DEBUG] Cleaned previous build artifacts."
 
-echo "[2] 🛠 Building Flask backend with PyInstaller..."
+echo "[2] 🐍 Creating Python virtual environment..."
+python3 -m venv "$VENV_DIR"
+source "$VENV_DIR/bin/activate"
+echo "[DEBUG] Virtual environment activated."
+
+echo "[3] 📦 Installing Python dependencies..."
+pip install --upgrade pip
+pip install -r "$PROJECT_ROOT/requirements.txt"
+
+echo "[4] 🛠 Building Flask backend with PyInstaller..."
 cd "$BACKEND_DIR"
 echo "[DEBUG] Running in: $(pwd)"
 pyinstaller --onefile app.py --name flask_server
 echo "[DEBUG] Flask server binary created at $BACKEND_DIR/dist/flask_server"
 
-echo "[3] 🔐 Fixing Electron sandbox permissions..."
+echo "[5] 🔐 Fixing Electron sandbox permissions..."
 cd "$PROJECT_ROOT"
-echo "[DEBUG] Running in: $(pwd)"
 sudo chown root node_modules/electron/dist/chrome-sandbox
 sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
 echo "[DEBUG] Set SUID sandbox permissions."
 
-echo "[4] 📦 Packaging Electron app for macOS..."
+echo "[6] 📦 Packaging Electron app for macOS..."
 npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
   --platform=darwin \
   --arch=universal \
@@ -50,6 +58,5 @@ npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
   --ignore="flask_server.spec" \
   --ignore="README.md" \
   --ignore="frontend"
-echo "[DEBUG] Electron app packaged."
 
-echo "[5] ✅ Done. App available at: $DIST_DIR/${APP_NAME}-darwin-universal/${APP_NAME}.app"
+echo "[7] ✅ Done. App available at: $DIST_DIR/${APP_NAME}-darwin-universal/${APP_NAME}.app"
