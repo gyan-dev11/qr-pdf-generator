@@ -18,6 +18,9 @@ __pycache__/
 *.deb
 *.snap
 
+dist/
+build/
+
 # Logs
 *.log
 npm-debug.log*
