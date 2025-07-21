@@ -71,7 +71,6 @@ npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
   --ignore="app.spec" \
   --ignore="flask_server.spec" \
   --ignore="backend/dist/flask_server" \
-  --ignore="README.md" \
-  # --ignore="frontend"
+  --ignore="README.md"
 
 echo "[7] ✅ Done. App available at: $DIST_DIR/${APP_NAME}-darwin-$ARCH/${APP_NAME}.app"
