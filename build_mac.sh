@@ -9,18 +9,20 @@ FRONTEND_DIR="$PROJECT_ROOT/frontend"
 DIST_DIR="$PROJECT_ROOT/dist"
 VENV_DIR="$PROJECT_ROOT/venv"
 APP_NAME="QRPDFApp"
+ARCH="$(uname -m)"  # Will be x86_64 or arm64
 
 echo "[DEBUG] Project root: $PROJECT_ROOT"
 echo "[DEBUG] Backend dir: $BACKEND_DIR"
 echo "[DEBUG] Frontend dir: $FRONTEND_DIR"
 echo "[DEBUG] Dist dir: $DIST_DIR"
 echo "[DEBUG] App name: $APP_NAME"
+echo "[DEBUG] System architecture: $ARCH"
 
 echo "[1] 🧹 Cleaning previous builds..."
 rm -rf "$BACKEND_DIR/dist"
 rm -rf "$PROJECT_ROOT/build"
 rm -rf "$DIST_DIR"
-rm -rf "$PROJECT_ROOT/${APP_NAME}-darwin-universal"
+rm -rf "$PROJECT_ROOT/${APP_NAME}-darwin-$ARCH"
 rm -rf "$VENV_DIR"
 echo "[DEBUG] Cleaned previous build artifacts."
 
@@ -34,14 +36,13 @@ pip install --upgrade pip
 pip install -r "$PROJECT_ROOT/requirements.txt"
 
 echo "[4] 🛠 Building Flask backend with PyInstaller..."
-echo "[DEBUG] Attempting to build in: $BACKEND_DIR"
+echo "[DEBUG] Checking for app.py in: $BACKEND_DIR"
 if [ ! -f "$BACKEND_DIR/app.py" ]; then
   echo "[ERROR] app.py not found in $BACKEND_DIR"
   exit 1
 fi
 
 cd "$BACKEND_DIR"
-echo "[DEBUG] Changed directory to: $(pwd)"
 ls -l  # Show files to confirm app.py exists
 pyinstaller --onefile app.py --name flask_server
 echo "[DEBUG] Flask server binary created at $BACKEND_DIR/dist/flask_server"
@@ -59,7 +60,7 @@ fi
 echo "[6] 📦 Packaging Electron app for macOS..."
 npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
   --platform=darwin \
-  --arch=universal \
+  --arch="$ARCH" \
   --out="$DIST_DIR" \
   --overwrite \
   --prune=true \
@@ -69,7 +70,8 @@ npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
   --ignore="requirements.txt" \
   --ignore="app.spec" \
   --ignore="flask_server.spec" \
+  --ignore="backend/dist/flask_server" \
   --ignore="README.md" \
   --ignore="frontend"
 
-echo "[7] ✅ Done. App available at: $DIST_DIR/${APP_NAME}-darwin-universal/${APP_NAME}.app"
+echo "[7] ✅ Done. App available at: $DIST_DIR/${APP_NAME}-darwin-$ARCH/${APP_NAME}.app"
