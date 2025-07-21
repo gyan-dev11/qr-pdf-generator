@@ -4,6 +4,7 @@
   "scripts": {
     "start": "electron .",
     "build:mac": "electron-packager . QRPDFApp --platform=darwin --arch=x64 --out=dist --overwrite --icon=icon.icns",
+    "build:mac-universal": "electron-packager . QRPDFApp --platform=darwin --arch=universal --out=dist --overwrite --icon=icon.icns",
     "build:win": "electron-packager . QRPDFApp --platform=win32 --arch=ia32 --out=dist --overwrite --icon=icon.ico"
 
   },
