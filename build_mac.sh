@@ -44,7 +44,7 @@ npx electron-packager "$PROJECT_ROOT" "$APP_NAME" \
   --out="$DIST_DIR" \
   --overwrite \
   --prune=true \
-  --ignore="build_mac_app.sh" \
+  --ignore="build_mac.sh" \
   --ignore="requirements.txt" \
   --ignore="app.spec" \
   --ignore="flask_server.spec" \
