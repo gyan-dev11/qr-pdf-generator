@@ -5,9 +5,8 @@ import os
 
 app = Flask(__name__)
 
-# Allow requests from localhost/127.0.0.1 (Electron)
-# CORS(app, resources={r"/*": {"origins": ["http://localhost", "http://127.0.0.1"]}})
-CORS(app, resources={r"/*": {"origins": "*"}}) 
+# CORS(app, resources={r"/*": {"origins": "*"}}) 
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
 
 @app.before_request
