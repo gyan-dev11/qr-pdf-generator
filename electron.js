@@ -5,7 +5,7 @@ const { spawn } = require('child_process');
 let pyProc = null;
 let mainWindow = null;
 
-const USE_PYINSTALLER_BINARY = false;
+const USE_PYINSTALLER_BINARY = true;
 
 function createWindow() {
     console.log('[Electron] Creating main window...');
