@@ -31,48 +31,77 @@
 
   <div id="result" class="message" style="display: none;"></div>
 
-  <script>
-    async function pickFolder(inputId) {
-      const folder = await window.electron.selectFolder();
-      if (folder) document.getElementById(inputId).value = folder;
+ <script>
+  async function pickFolder(inputId) {
+    console.log(`[UI] Selecting folder for ${inputId}`);
+    const folder = await window.electron.selectFolder();
+    if (folder) {
+      console.log(`[UI] Folder selected: ${folder}`);
+      document.getElementById(inputId).value = folder;
+    } else {
+      console.warn(`[UI] No folder selected for ${inputId}`);
     }
+  }
 
-    async function pickFile(inputId) {
-      const file = await window.electron.selectFile();
-      if (file) document.getElementById(inputId).value = file;
+  async function pickFile(inputId) {
+    console.log(`[UI] Selecting file for ${inputId}`);
+    const file = await window.electron.selectFile();
+    if (file) {
+      console.log(`[UI] File selected: ${file}`);
+      document.getElementById(inputId).value = file;
+    } else {
+      console.warn(`[UI] No file selected for ${inputId}`);
     }
+  }
 
-    document.getElementById('generateBtn').addEventListener('click', async () => {
-      const qrPath = document.getElementById('qr_folder_path').value;
-      const outputPath = document.getElementById('output_folder_path').value;
-      const logoPath = document.getElementById('logo_path').value;
+  document.getElementById('generateBtn').addEventListener('click', async () => {
+    const qrPath = document.getElementById('qr_folder_path').value;
+    const outputPath = document.getElementById('output_folder_path').value;
+    const logoPath = document.getElementById('logo_path').value;
 
-      const resultDiv = document.getElementById('result');
-      resultDiv.style.display = 'none';
+    const resultDiv = document.getElementById('result');
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'message';
+    resultDiv.innerText = 'Processing...';
 
-      const data = {
-        qr_folder: qrPath,
-        output_folder: outputPath,
-        logo_path: logoPath
-      };
-
-      try {
-        const res = await fetch('http://localhost:5000/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-        const msg = await res.text();
-        resultDiv.style.display = 'block';
-        resultDiv.className = res.ok ? 'message success' : 'message error';
-        resultDiv.innerText = msg;
-      } catch (err) {
-        resultDiv.style.display = 'block';
-        resultDiv.className = 'message error';
-        resultDiv.innerText = 'Failed to reach Flask server.';
-      }
+    console.log('[UI] Generating PDFs with paths:', {
+      qrPath,
+      outputPath,
+      logoPath
     });
-  </script>
+
+    // Basic input validation
+    if (!qrPath || !outputPath) {
+      resultDiv.className = 'message error';
+      resultDiv.innerText = 'QR folder and Output folder are required.';
+      console.error('[UI] Missing required folders.');
+      return;
+    }
+
+    const data = {
+      qr_folder: qrPath,
+      output_folder: outputPath,
+      logo_path: logoPath
+    };
+
+    try {
+      const res = await fetch('http://localhost:5000/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const msg = await res.text();
+      resultDiv.className = res.ok ? 'message success' : 'message error';
+      resultDiv.innerText = msg;
+      console.log('[UI] Response:', msg);
+    } catch (err) {
+      console.error('[UI] Fetch error:', err);
+      resultDiv.className = 'message error';
+      resultDiv.innerText = 'Failed to reach Flask server.';
+    }
+  });
+</script>
+
 </body>
 </html>
