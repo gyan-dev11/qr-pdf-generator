@@ -2,42 +2,46 @@
 
 set -e
 
-# App name and paths
+# Define paths
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_DIR="$PROJECT_ROOT/backend"
+DIST_DIR="$PROJECT_ROOT/dist"
 APP_NAME="QRPDFApp"
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_DIR="$ROOT_DIR/bundle_app"
-BACKEND_DIR="$APP_DIR/backend"
-DIST_DIR="$APP_DIR/dist"
-FINAL_APP_PATH="$DIST_DIR/$APP_NAME-darwin-universal/$APP_NAME.app"
+APP_ZIP="$APP_NAME.zip"
 
-echo "📦 Cleaning previous builds..."
-rm -rf "$DIST_DIR" "$BACKEND_DIR"/{flask_server,build,dist,__pycache__}
+echo "[1] Cleaning previous builds..."
+rm -rf "$BACKEND_DIR/dist" "$BACKEND_DIR/build" "$BACKEND_DIR/__pycache__"
+rm -rf "$DIST_DIR/$APP_NAME-darwin-universal"
 
-echo "🐍 Building Flask backend binary with PyInstaller..."
+echo "[2] Building Flask backend with PyInstaller..."
 cd "$BACKEND_DIR"
-pyinstaller app.py --name flask_server --onefile --noconsole
-cd "$ROOT_DIR"
+pyinstaller app.py --name flask_server --onefile --distpath "$BACKEND_DIR/dist" --hidden-import flask
 
-echo "🚀 Packaging Electron app without icon..."
-cd "$APP_DIR"
-npm install
+echo "[3] Copying binary to backend directory..."
+cp "$BACKEND_DIR/dist/flask_server" "$BACKEND_DIR/flask_server"
+chmod +x "$BACKEND_DIR/flask_server"
+
+echo "[4] Packaging Electron app..."
+cd "$PROJECT_ROOT"
 npx electron-packager . "$APP_NAME" \
   --platform=darwin \
   --arch=universal \
-  --overwrite \
   --out=dist \
+  --overwrite \
   --prune=true \
-  --ignore="^/backend/app.py$" \
   --ignore="^/venv" \
-  --ignore="^/build_app" \
-  --ignore="^/build_mac_app.sh"
+  --ignore="__pycache__" \
+  --ignore=".*\.pyc" \
+  --ignore=".*\.spec" \
+  --ignore="/build_app" \
+  --ignore="/dist"
 
-echo "🔓 Removing macOS quarantine metadata..."
-xattr -dr com.apple.quarantine "$FINAL_APP_PATH"
+echo "[5] Removing macOS quarantine attributes..."
+xattr -dr com.apple.quarantine "$DIST_DIR/$APP_NAME-darwin-universal/$APP_NAME.app"
 
-echo "🗜️ Zipping the final .app..."
+echo "[6] Zipping final .app..."
 cd "$DIST_DIR/$APP_NAME-darwin-universal"
-zip -r "${APP_NAME}.zip" "$APP_NAME.app"
+zip -r "$APP_ZIP" "$APP_NAME.app"
 
-echo "✅ Done!"
-echo "📦 Final ZIP located at: $DIST_DIR/$APP_NAME-darwin-universal/${APP_NAME}.zip"
+echo "✅ Build complete!"
+echo "Final zip: $DIST_DIR/$APP_NAME-darwin-universal/$APP_ZIP"
