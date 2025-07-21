@@ -6,7 +6,7 @@ let pyProc = null;
 let mainWindow = null;
 
 // Toggle this to switch between Python script and PyInstaller binary
-const USE_PYINSTALLER_BINARY = true;
+const USE_PYINSTALLER_BINARY = false;
 
 function createWindow() {
     console.log('[Electron] Creating main window...');
