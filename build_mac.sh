@@ -34,6 +34,7 @@ pip install --upgrade pip
 pip install -r "$PROJECT_ROOT/requirements.txt"
 
 echo "[4] 🛠 Building Flask backend with PyInstaller..."
+echo "$BACKEND_DIR"
 cd "$BACKEND_DIR"
 echo "[DEBUG] Running in: $(pwd)"
 pyinstaller --onefile app.py --name flask_server
